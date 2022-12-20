@@ -39,7 +39,6 @@ func GetTags(c *gin.Context) {
 	})
 }
 
-//新增文章标签
 func AddTag(c *gin.Context) {
 	name := c.Query("name")
 	state := com.StrTo(c.DefaultQuery("state", "0")).MustInt()
@@ -70,7 +69,6 @@ func AddTag(c *gin.Context) {
 
 }
 
-//修改文章标签
 func EditTag(c *gin.Context) {
 	id := com.StrTo(c.Param("id")).MustInt()
 	name := c.Query("name")
