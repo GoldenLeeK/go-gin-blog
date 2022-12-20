@@ -1,7 +1,6 @@
 package routers
 
 import (
-	_ "github.com/GoldenLeeK/go-gin-blog/docs"
 	"github.com/GoldenLeeK/go-gin-blog/middleware/jwt"
 	"github.com/GoldenLeeK/go-gin-blog/pkg/setting"
 	v1 "github.com/GoldenLeeK/go-gin-blog/routers/api/v1"
@@ -16,8 +15,6 @@ func InitRouter() *gin.Engine {
 	r.Use(gin.Recovery())
 
 	gin.SetMode(setting.RunMode)
-
-	//r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	//获取授权token
 	r.POST("/auth", v1.GetAuth)
