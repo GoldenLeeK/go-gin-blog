@@ -44,7 +44,7 @@ func GetTags(c *gin.Context) {
 // @Param name query string true "Name"
 // @Param state query int false "State"
 // @Param created_by query int false "CreatedBy"
-// @Success 200 {string} json "{"code":200,"data":{},"msg":"ok"}"
+// @Success 200 {string} string "{"code":200,"data":{},"msg":"ok"}"
 // @Router /api/v1/tags [post]
 func AddTag(c *gin.Context) {
 	name := c.Query("name")
@@ -82,7 +82,7 @@ func AddTag(c *gin.Context) {
 // @Param name query string true "ID"
 // @Param state query int false "State"
 // @Param modified_by query string true "ModifiedBy"
-// @Success 200 {string} json "{"code":200,"data":{},"msg":"ok"}"
+// @Success 200 {string} string "{"code":200,"data":{},"msg":"ok"}"
 // @Router /api/v1/tags/{id} [put]
 func EditTag(c *gin.Context) {
 	id := com.StrTo(c.Param("id")).MustInt()
