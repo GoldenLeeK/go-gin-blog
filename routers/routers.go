@@ -7,8 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
-
-	_ "github.com/GoldenLeeK/go-gin-blog/docs"
 )
 
 func InitRouter() *gin.Engine {
