@@ -18,6 +18,7 @@ require (
 	github.com/goccy/go-json v0.10.0 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
+	github.com/robfig/cron v1.2.0 // indirect
 	github.com/shiena/ansicolor v0.0.0-20200904210342-c7312218db18 // indirect
 	golang.org/x/crypto v0.4.0 // indirect
 	golang.org/x/net v0.4.0 // indirect

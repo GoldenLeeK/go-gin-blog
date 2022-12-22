@@ -16,7 +16,7 @@ type Article struct {
 
 func ExistArticleById(id int) bool {
 	var article Article
-	db.Select("id").Where("id=?", id).First(&article)
+	db.Select("id").Where("id=? and deleted_on != 0", id).First(&article)
 
 	return article.ID > 0
 }
@@ -32,13 +32,13 @@ func GetArticles(pageNum int, pageSize int, maps interface{}) (articles []Articl
 }
 
 func GetArticle(id int) (article Article) {
-	db.Where("id=?", id).First(&article)
+	db.Where("id=? and deletedOn != 0", id).First(&article)
 	db.Model(&article).Related(&article.Tag)
 	return
 }
 
 func EditArticle(id int, data interface{}) bool {
-	db.Model(&Article{}).Where("id=?", id).Updates(data)
+	db.Model(&Article{}).Where("id=? and deleted_on != 0", id).Updates(data)
 	return true
 }
 
@@ -55,6 +55,12 @@ func AddArticle(data map[string]interface{}) bool {
 }
 
 func DeleteArticle(id int) bool {
-	db.Where("id=?", id).Delete(Article{})
+	db.Where("id=? and deleted_on != 0", id).Delete(Article{})
+	return true
+}
+
+func CleanAllArticle() bool {
+	db.Unscoped().Where("deleted_on != ? ", 0).Delete(&Article{})
+
 	return true
 }

@@ -40,9 +40,9 @@ func GetTags(c *gin.Context) {
 }
 
 func AddTag(c *gin.Context) {
-	name := c.Query("name")
-	state := com.StrTo(c.DefaultQuery("state", "0")).MustInt()
-	createdBy := c.Query("created_by")
+	name := c.PostForm("name")
+	state := com.StrTo(c.DefaultPostForm("state", "0")).MustInt()
+	createdBy := c.PostForm("created_by")
 
 	valid := validation.Validation{}
 	valid.Required(name, "name").Message("名称不得为空")
@@ -71,8 +71,8 @@ func AddTag(c *gin.Context) {
 
 func EditTag(c *gin.Context) {
 	id := com.StrTo(c.Param("id")).MustInt()
-	name := c.Query("name")
-	modifiedBy := c.Query("modified_by")
+	name := c.PostForm("name")
+	modifiedBy := c.PostForm("modified_by")
 
 	valid := validation.Validation{}
 
