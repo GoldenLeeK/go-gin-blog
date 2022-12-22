@@ -1,16 +1,14 @@
 package utils
 
 import (
+	"github.com/GoldenLeeK/go-gin-blog/pkg/setting"
 	"time"
 
-	"github.com/GoldenLeeK/go-gin-blog/pkg/setting"
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
-var jwtSecret = []byte(setting.JwtSecret)
-
 type Claims struct {
-	Username string `json"username"`
+	Username string `json:"username"`
 	Password string `json:"password"`
 	jwt.StandardClaims
 }
@@ -30,7 +28,7 @@ func GenerateToken(username, password string) (string, error) {
 
 	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	token, err := tokenClaims.SignedString(jwtSecret)
+	token, err := tokenClaims.SignedString([]byte(setting.AppSetting.JwtSecret))
 
 	return token, err
 
@@ -38,7 +36,7 @@ func GenerateToken(username, password string) (string, error) {
 
 func ParseToken(token string) (*Claims, error) {
 	tokenClaims, err := jwt.ParseWithClaims(token, &Claims{}, func(token *jwt.Token) (interface{}, error) {
-		return jwtSecret, nil
+		return []byte(setting.AppSetting.JwtSecret), nil
 	})
 
 	if tokenClaims != nil {

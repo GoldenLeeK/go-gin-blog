@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"fmt"
+	"github.com/GoldenLeeK/go-gin-blog/pkg/logging"
 	"log"
 	"net/http"
 
@@ -68,7 +70,7 @@ func GetArticles(c *gin.Context) {
 	if !valid.HasErrors() {
 		code = e.SUCCESS
 
-		data["lists"] = models.GetArticles(utils.GetPage(c), setting.PageSize, maps)
+		data["lists"] = models.GetArticles(utils.GetPage(c), setting.AppSetting.PageSize, maps)
 		data["total"] = models.GetArticleTotal(maps)
 	} else {
 		for _, err := range valid.Errors {
@@ -116,7 +118,7 @@ func AddArticle(c *gin.Context) {
 		}
 	} else {
 		for _, err := range valid.Errors {
-			log.Printf("err.key: %s, err.message: %s", err.Key, err.Message)
+			logging.Error(fmt.Sprintf("err.key: %s, err.message: %s", err.Key, err.Message))
 		}
 	}
 
@@ -179,7 +181,7 @@ func EditArticle(c *gin.Context) {
 		}
 	} else {
 		for _, err := range valid.Errors {
-			log.Printf("err.key: %s, err.message: %s", err.Key, err.Message)
+			logging.Error(fmt.Sprintf("err.key: %s, err.message: %s", err.Key, err.Message))
 		}
 	}
 
@@ -205,7 +207,7 @@ func DeleteArticle(c *gin.Context) {
 		}
 	} else {
 		for _, err := range valid.Errors {
-			log.Printf("err.key: %s, err.message: %s", err.Key, err.Message)
+			logging.Error(fmt.Sprintf("err.key: %s, err.message: %s", err.Key, err.Message))
 		}
 	}
 

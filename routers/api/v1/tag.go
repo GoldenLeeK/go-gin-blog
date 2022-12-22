@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"fmt"
+	"github.com/GoldenLeeK/go-gin-blog/pkg/logging"
 	"net/http"
 
 	"github.com/GoldenLeeK/go-gin-blog/models"
@@ -30,7 +32,7 @@ func GetTags(c *gin.Context) {
 	}
 
 	code := e.SUCCESS
-	data["lists"] = models.GetTags(utils.GetPage(c), setting.PageSize, maps)
+	data["lists"] = models.GetTags(utils.GetPage(c), setting.AppSetting.PageSize, maps)
 	data["total"] = models.GetTagTotal(maps)
 	c.JSON(http.StatusOK, gin.H{
 		"code": code,
@@ -58,6 +60,10 @@ func AddTag(c *gin.Context) {
 			models.AddTag(name, state, createdBy)
 		} else {
 			code = e.ERROR_EXIST_TAG
+		}
+	} else {
+		for _, err := range valid.Errors {
+			logging.Error(fmt.Sprintf("err.key: %s, err.message: %s", err.Key, err.Message))
 		}
 	}
 
@@ -103,6 +109,10 @@ func EditTag(c *gin.Context) {
 		} else {
 			code = e.ERROR_NOT_EXIST_TAG
 		}
+	} else {
+		for _, err := range valid.Errors {
+			logging.Error(fmt.Sprintf("err.key: %s, err.message: %s", err.Key, err.Message))
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -128,6 +138,10 @@ func DeleteTag(c *gin.Context) {
 			models.DeleteTag(id)
 		} else {
 			code = e.ERROR_NOT_EXIST_TAG
+		}
+	} else {
+		for _, err := range valid.Errors {
+			logging.Error(fmt.Sprintf("err.key: %s, err.message: %s", err.Key, err.Message))
 		}
 	}
 

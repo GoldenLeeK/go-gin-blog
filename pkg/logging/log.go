@@ -28,9 +28,9 @@ const (
 	FATAL
 )
 
-func init() {
-	filepath := getLogFileFullPath()
-	F = openLogFile(filepath)
+func Setup() {
+	logFilepath := getLogFileFullPath()
+	F = openLogFile(logFilepath)
 
 	logger = log.New(F, DefaultPrefix, log.LstdFlags)
 }
