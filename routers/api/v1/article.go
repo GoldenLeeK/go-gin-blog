@@ -88,6 +88,7 @@ func GetArticles(c *gin.Context) {
 func AddArticle(c *gin.Context) {
 	tagId := com.StrTo(c.PostForm("tag_id")).MustInt()
 	title := c.PostForm("title")
+	coverImageUrl := c.PostForm("cover_image_url")
 	desc := c.PostForm("desc")
 	content := c.PostForm("content")
 	createdBy := c.PostForm("created_by")
@@ -96,6 +97,7 @@ func AddArticle(c *gin.Context) {
 	valid := validation.Validation{}
 	valid.Min(tagId, 1, "tag_id").Message("标签ID必须大于0")
 	valid.Required(title, "title").Message("标题不能为空")
+	valid.Required(coverImageUrl, "cover_image_url").Message("封面图片不得为空")
 	valid.Required(desc, "desc").Message("简述不能为空")
 	valid.Required(content, "content").Message("内容不能为空")
 	valid.Required(createdBy, "created_by").Message("创建人不能为空")
@@ -107,6 +109,7 @@ func AddArticle(c *gin.Context) {
 			data := make(map[string]interface{})
 			data["tag_id"] = tagId
 			data["title"] = title
+			data["cover_image_url"] = coverImageUrl
 			data["desc"] = desc
 			data["content"] = content
 			data["created_by"] = createdBy
@@ -134,6 +137,7 @@ func EditArticle(c *gin.Context) {
 	id := com.StrTo(c.Param("id")).MustInt()
 	tagId := com.StrTo(c.PostForm("tag_id")).MustInt()
 	title := c.PostForm("title")
+	coverImageUrl := c.PostForm("cover_image_url")
 	desc := c.PostForm("desc")
 	content := c.PostForm("content")
 	modifiedBy := c.PostForm("modified_by")
@@ -150,6 +154,7 @@ func EditArticle(c *gin.Context) {
 	valid.MaxSize(content, 65535, "content").Message("内容最长为65535字符")
 	valid.Required(modifiedBy, "modified_by").Message("修改人不能为空")
 	valid.MaxSize(modifiedBy, 100, "modified_by").Message("修改人最长为100字符")
+	valid.Required(coverImageUrl, "cover_image_url").Message("封面图片不得为空")
 
 	code := e.INVALID_PARAMS
 	if !valid.HasErrors() {
@@ -167,6 +172,9 @@ func EditArticle(c *gin.Context) {
 				}
 				if content != "" {
 					data["content"] = content
+				}
+				if coverImageUrl != "" {
+					data["cover_image_url"] = coverImageUrl
 				}
 
 				data["modified_by"] = modifiedBy
