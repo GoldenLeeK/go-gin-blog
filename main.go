@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/GoldenLeeK/go-gin-blog/models"
+	"github.com/GoldenLeeK/go-gin-blog/pkg/gredis"
 	"github.com/GoldenLeeK/go-gin-blog/pkg/logging"
 	"log"
 	"syscall"
@@ -17,6 +18,10 @@ func main() {
 	setting.Setup()
 	models.Setup()
 	logging.Setup()
+	err := gredis.Setup()
+	if err != nil {
+		panic(fmt.Sprintf("redis server error : %v", err))
+	}
 
 	endless.DefaultReadTimeOut = setting.ServerSetting.ReadTimeout
 	endless.DefaultWriteTimeOut = setting.ServerSetting.WriteTimeout
@@ -28,7 +33,7 @@ func main() {
 		log.Printf("Actual pid is %d", syscall.Getpid())
 	}
 
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	if err != nil {
 		log.Printf("Server err: %v", err)
 	}

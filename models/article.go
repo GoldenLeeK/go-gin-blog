@@ -1,5 +1,7 @@
 package models
 
+import "github.com/jinzhu/gorm"
+
 type Article struct {
 	Model
 
@@ -27,15 +29,19 @@ func GetArticleTotal(maps interface{}) (count int) {
 	return
 }
 
-func GetArticles(pageNum int, pageSize int, maps interface{}) (articles []Article) {
-	db.Preload("Tag").Where(maps).Offset(pageNum).Limit(pageSize).Find(&articles)
+func GetArticles(pageNum int, pageSize int, maps interface{}) (articles []*Article, err error) {
+	err = db.Preload("Tag").Where(maps).Offset(pageNum).Limit(pageSize).Find(&articles).Error
 	return
 }
 
-func GetArticle(id int) (article Article) {
-	db.Where("id=? and deletedOn = 0", id).First(&article)
-	db.Model(&article).Related(&article.Tag)
-	return
+func GetArticle(id int) (*Article, error) {
+	var article Article
+
+	err := db.Where("id=? and deleted_on = 0", id).First(&article).Related(&article.Tag).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+	return &article, nil
 }
 
 func EditArticle(id int, data interface{}) bool {
@@ -43,17 +49,12 @@ func EditArticle(id int, data interface{}) bool {
 	return true
 }
 
-func AddArticle(data map[string]interface{}) bool {
-	db.Create(&Article{
-		TagID:         data["tag_id"].(int),
-		Title:         data["title"].(string),
-		CoverImageUrl: data["cover_image_url"].(string),
-		Desc:          data["desc"].(string),
-		Content:       data["content"].(string),
-		CreatedBy:     data["created_by"].(string),
-		State:         data["state"].(int),
-	})
-	return true
+func AddArticle(article *Article) (bool, error) {
+	err := db.Create(article).Error
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func DeleteArticle(id int) bool {

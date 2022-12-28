@@ -2,8 +2,9 @@ package v1
 
 import (
 	"fmt"
+	"github.com/GoldenLeeK/go-gin-blog/pkg/app"
 	"github.com/GoldenLeeK/go-gin-blog/pkg/logging"
-	"log"
+	"github.com/GoldenLeeK/go-gin-blog/service/article_service"
 	"net/http"
 
 	"github.com/GoldenLeeK/go-gin-blog/models"
@@ -16,36 +17,41 @@ import (
 )
 
 func GetArticle(c *gin.Context) {
-	id := com.StrTo(c.Query("id")).MustInt()
+	appG := app.Gin{C: c}
 
+	id := com.StrTo(c.Param("id")).MustInt()
 	valid := validation.Validation{}
 	valid.Min(id, 1, "id").Message("ID必须大于0")
 
-	code := e.INVALID_PARAMS
-	var data interface{}
-
-	if !valid.HasErrors() {
-		if models.ExistArticleById(id) {
-			data = models.GetArticle(id)
-			code = e.SUCCESS
-		} else {
-			code = e.ERROR_NOT_EXIST_ARTICLE
-		}
-	} else {
-		for _, err := range valid.Errors {
-			log.Printf("err.key:%s,err.message:%s", err.Key, err.Message)
-		}
+	if valid.HasErrors() {
+		app.MarkErrors(valid.Errors)
+		appG.Response(http.StatusOK, e.INVALID_PARAMS, nil)
+		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code": code,
-		"msg":  e.GetMsg(code),
-		"data": data,
-	})
+	articleService := article_service.Article{ID: id}
+	exists, err := articleService.ExistByID()
+	if err != nil {
+		appG.Response(http.StatusOK, e.ERROR_CHECK_EXIST_ARTICLE_FAIL, nil)
+		return
+	}
+	if !exists {
+		appG.Response(http.StatusOK, e.ERROR_NOT_EXIST_ARTICLE, nil)
+		return
+	}
+
+	article, err := articleService.Get()
+	if err != nil {
+		appG.Response(http.StatusOK, e.ERROR_GET_ARTICLE_FAIL, nil)
+		return
+	}
+
+	appG.Response(http.StatusOK, e.SUCCESS, article)
 
 }
 
 func GetArticles(c *gin.Context) {
+	appG := app.Gin{C: c}
 	data := make(map[string]interface{})
 	maps := make(map[string]interface{})
 	valid := validation.Validation{}
@@ -54,7 +60,6 @@ func GetArticles(c *gin.Context) {
 	if arg := c.Query("state"); arg != "" {
 		state = com.StrTo(arg).MustInt()
 		maps["state"] = state
-
 		valid.Range(state, 0, 1, "state").Message("状态只允许为0或者1")
 	}
 
@@ -62,30 +67,32 @@ func GetArticles(c *gin.Context) {
 	if arg := c.Query("tag_id"); arg != "" {
 		tagId = com.StrTo(arg).MustInt()
 		maps["tag_id"] = tagId
-
 		valid.Min(tagId, 1, "tag_id").Message("标签ID必须大于0")
 	}
 
-	code := e.INVALID_PARAMS
-	if !valid.HasErrors() {
-		code = e.SUCCESS
-
-		data["lists"] = models.GetArticles(utils.GetPage(c), setting.AppSetting.PageSize, maps)
-		data["total"] = models.GetArticleTotal(maps)
-	} else {
-		for _, err := range valid.Errors {
-			log.Printf("err.key: %s, err.message: %s", err.Key, err.Message)
-		}
+	if valid.HasErrors() {
+		app.MarkErrors(valid.Errors)
+		appG.Response(http.StatusOK, e.INVALID_PARAMS, nil)
+		return
 	}
+	articleService := article_service.Article{
+		PageNum:  utils.GetPage(c),
+		PageSize: setting.AppSetting.PageSize,
+		Maps:     maps,
+	}
+	lists, err := articleService.GetAll()
+	if err != nil {
+		appG.Response(http.StatusOK, e.ERROR_GET_ARTICLES_FAIL, nil)
+		return
+	}
+	data["lists"] = lists
+	data["total"] = articleService.Total()
 
-	c.JSON(http.StatusOK, gin.H{
-		"code": code,
-		"msg":  e.GetMsg(code),
-		"data": data,
-	})
+	appG.Response(http.StatusOK, e.SUCCESS, data)
 
 }
 func AddArticle(c *gin.Context) {
+	appG := app.Gin{C: c}
 	tagId := com.StrTo(c.PostForm("tag_id")).MustInt()
 	title := c.PostForm("title")
 	coverImageUrl := c.PostForm("cover_image_url")
@@ -103,33 +110,37 @@ func AddArticle(c *gin.Context) {
 	valid.Required(createdBy, "created_by").Message("创建人不能为空")
 	valid.Range(state, 0, 1, "state").Message("状态只允许0或1")
 
-	code := e.INVALID_PARAMS
-	if !valid.HasErrors() {
-		if models.ExistTagById(tagId) {
-			data := make(map[string]interface{})
-			data["tag_id"] = tagId
-			data["title"] = title
-			data["cover_image_url"] = coverImageUrl
-			data["desc"] = desc
-			data["content"] = content
-			data["created_by"] = createdBy
-			data["state"] = state
-			models.AddArticle(data)
-			code = e.SUCCESS
-		} else {
-			code = e.ERROR_NOT_EXIST_TAG
-		}
-	} else {
-		for _, err := range valid.Errors {
-			logging.Error(fmt.Sprintf("err.key: %s, err.message: %s", err.Key, err.Message))
-		}
+	if valid.HasErrors() {
+		app.MarkErrors(valid.Errors)
+		appG.Response(http.StatusOK, e.INVALID_PARAMS, nil)
+		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code": code,
-		"msg":  e.GetMsg(code),
-		"data": make(map[string]interface{}),
-	})
+	if !models.ExistTagById(tagId) {
+		appG.Response(http.StatusOK, e.ERROR_NOT_EXIST_TAG, nil)
+	}
+
+	articleService := article_service.Article{
+		Article: &models.Article{
+			TagID:         tagId,
+			Title:         title,
+			CoverImageUrl: coverImageUrl,
+			Desc:          desc,
+			Content:       content,
+			CreatedBy:     createdBy,
+			State:         state,
+		},
+	}
+
+	_, err := articleService.Add()
+
+	if err != nil {
+		logging.Info(err)
+		appG.Response(http.StatusOK, e.ERROR_CREATE_ARTICLE_FAIL, nil)
+		return
+	}
+
+	appG.Response(http.StatusOK, e.SUCCESS, nil)
 }
 func EditArticle(c *gin.Context) {
 	valid := validation.Validation{}
