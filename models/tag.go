@@ -1,5 +1,7 @@
 package models
 
+import "github.com/jinzhu/gorm"
+
 type Tag struct {
 	Model
 
@@ -9,12 +11,21 @@ type Tag struct {
 	State      int    `json:"state"`
 }
 
-func GetTags(pageNum int, pageSize int, maps interface{}) (tags []Tag) {
-	db.Where(maps).Offset(pageNum).Limit(pageSize).Find(&tags)
+func GetTag(id int) (*Tag, error) {
+	var tag Tag
+	err := db.Where("id=? and deleted_on = 0", id).First(&tag).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+	return &tag, nil
+}
+
+func GetTags(pageNum int, pageSize int, maps interface{}) (tags []*Tag, err error) {
+	err = db.Where(maps).Offset(pageNum).Limit(pageSize).Find(&tags).Error
 	return
 }
 func GetTagTotal(maps interface{}) (count int) {
-	db.Model(&Tag{}).Where(maps).Count(&count)
+	db.Model(&Tag{}).Where(maps).Where("deleted_on = 0").Count(&count)
 	return
 }
 func ExistTagByName(name string) bool {
@@ -27,22 +38,26 @@ func ExistTagById(id int) bool {
 	db.Select("id").Where("id=? and deleted_on = 0", id).First(&tag)
 	return tag.ID > 0
 }
-func AddTag(name string, state int, createdBy string) bool {
-	db.Create(&Tag{
-		Name:      name,
-		State:     state,
-		CreatedBy: createdBy,
-	})
-	return true
+func AddTag(tag *Tag) (bool, error) {
+	err := db.Create(tag).Error
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
-func EditTag(id int, data interface{}) bool {
-	db.Model(&Tag{}).Where("id=? and deleted_on = 0", id).Updates(data)
-	return true
+func EditTag(tag *Tag) (bool, error) {
+	err := db.Model(tag).Updates(tag).Error
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
-func DeleteTag(id int) bool {
-	db.Where("id = ? and deleted_on = 0", id).Delete(&Tag{})
-
-	return true
+func DeleteTag(id int) (bool, error) {
+	err := db.Where("id = ? and deleted_on = 0", id).Delete(&Tag{}).Error
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func CleanAllTag() bool {

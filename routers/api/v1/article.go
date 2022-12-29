@@ -4,6 +4,7 @@ import (
 	"github.com/GoldenLeeK/go-gin-blog/pkg/app"
 	"github.com/GoldenLeeK/go-gin-blog/pkg/logging"
 	"github.com/GoldenLeeK/go-gin-blog/service/article_service"
+	"github.com/GoldenLeeK/go-gin-blog/service/tag_service"
 	"net/http"
 
 	"github.com/GoldenLeeK/go-gin-blog/models"
@@ -115,8 +116,12 @@ func AddArticle(c *gin.Context) {
 		return
 	}
 
-	if !models.ExistTagById(tagId) {
+	tagService := tag_service.Tag{ID: tagId}
+	tagExists, _ := tagService.ExistByID()
+
+	if !tagExists {
 		appG.Response(http.StatusOK, e.ERROR_NOT_EXIST_TAG, nil)
+		return
 	}
 
 	articleService := article_service.Article{
@@ -188,7 +193,10 @@ func EditArticle(c *gin.Context) {
 		return
 	}
 
-	if !models.ExistTagById(tagId) {
+	tagService := tag_service.Tag{ID: tagId}
+	tagExists, _ := tagService.ExistByID()
+
+	if !tagExists {
 		appG.Response(http.StatusOK, e.ERROR_NOT_EXIST_TAG, nil)
 		return
 	}
@@ -218,7 +226,7 @@ func EditArticle(c *gin.Context) {
 		return
 	}
 
-	appG.Response(http.StatusOK, e.SUCCESS, article)
+	appG.Response(http.StatusOK, e.SUCCESS, nil)
 }
 func DeleteArticle(c *gin.Context) {
 	appG := app.Gin{C: c}

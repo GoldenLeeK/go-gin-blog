@@ -15,6 +15,10 @@ type Tag struct {
 	PageSize int
 }
 
+func (t *Tag) GetTagKey() string {
+	return e.CACHE_TAG + "_" + strconv.Itoa(t.ID)
+}
+
 func (t *Tag) GetTagsKey() string {
 	keys := []string{
 		e.CACHE_TAG,

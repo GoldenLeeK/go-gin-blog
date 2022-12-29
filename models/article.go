@@ -25,7 +25,7 @@ func ExistArticleById(id int) bool {
 }
 
 func GetArticleTotal(maps interface{}) (count int) {
-	db.Model(&Article{}).Where(maps).Count(&count)
+	db.Model(&Article{}).Where(maps).Where("deleted_on = 0").Count(&count)
 	return
 }
 
