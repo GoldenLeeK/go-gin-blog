@@ -18,6 +18,8 @@ var MsgFlags = map[int]string{
 	ERROR_GET_ARTICLE_FAIL:          "查询文章失败",
 	ERROR_GET_ARTICLES_FAIL:         "查询文章列表失败",
 	ERROR_CREATE_ARTICLE_FAIL:       "创建文章失败",
+	ERROR_UPDATE_ARTICLE_FAIL:       "更新文章失败",
+	ERROR_DELETE_ARTICLE_FAIL:       "删除文章失败",
 }
 
 func GetMsg(code int) string {

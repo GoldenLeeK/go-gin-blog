@@ -96,3 +96,19 @@ func (a *Article) Add() (bool, error) {
 	}
 	return models.AddArticle(a.Article)
 }
+
+func (a *Article) Update() (bool, error) {
+	err := gredis.LikeDeletes(e.CACHE_ARTICLE)
+	if err != nil {
+		return false, err
+	}
+	return models.EditArticle(a.Article)
+}
+
+func (a *Article) Delete() (bool, error) {
+	err := gredis.LikeDeletes(e.CACHE_ARTICLE)
+	if err != nil {
+		return false, err
+	}
+	return models.DeleteArticle(a.ID)
+}

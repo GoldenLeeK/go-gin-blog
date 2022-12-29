@@ -44,9 +44,12 @@ func GetArticle(id int) (*Article, error) {
 	return &article, nil
 }
 
-func EditArticle(id int, data interface{}) bool {
-	db.Model(&Article{}).Where("id=? and deleted_on = 0", id).Updates(data)
-	return true
+func EditArticle(article *Article) (bool, error) {
+	err := db.Model(article).Updates(article).Error
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func AddArticle(article *Article) (bool, error) {
@@ -57,9 +60,12 @@ func AddArticle(article *Article) (bool, error) {
 	return true, nil
 }
 
-func DeleteArticle(id int) bool {
-	db.Where("id=? and deleted_on = 0", id).Delete(Article{})
-	return true
+func DeleteArticle(id int) (bool, error) {
+	err := db.Where("id=? and deleted_on = 0", id).Delete(Article{}).Error
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func CleanAllArticle() bool {
