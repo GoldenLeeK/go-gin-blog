@@ -2,7 +2,8 @@ package v1
 
 import (
 	"github.com/GoldenLeeK/go-gin-blog/pkg/app"
-	"github.com/GoldenLeeK/go-gin-blog/service/tag_service"
+	"github.com/GoldenLeeK/go-gin-blog/pkg/export"
+	"github.com/GoldenLeeK/go-gin-blog/service"
 	"net/http"
 
 	"github.com/GoldenLeeK/go-gin-blog/models"
@@ -14,7 +15,7 @@ import (
 	"github.com/unknwon/com"
 )
 
-//获取多个文章标签
+//获取标签列表
 func GetTags(c *gin.Context) {
 	appG := app.Gin{C: c}
 	name := c.Query("name")
@@ -31,7 +32,7 @@ func GetTags(c *gin.Context) {
 		state = com.StrTo(arg).MustInt()
 		maps["state"] = state
 	}
-	tagService := tag_service.Tag{
+	tagService := service.Tag{
 		PageSize: setting.AppSetting.PageSize,
 		PageNum:  utils.GetPage(c),
 		Maps:     maps,
@@ -48,6 +49,7 @@ func GetTags(c *gin.Context) {
 	appG.Response(http.StatusOK, e.SUCCESS, data)
 }
 
+//添加标签
 func AddTag(c *gin.Context) {
 	appG := app.Gin{C: c}
 	name := c.PostForm("name")
@@ -67,7 +69,7 @@ func AddTag(c *gin.Context) {
 		return
 	}
 
-	tagService := tag_service.Tag{
+	tagService := service.Tag{
 		Tag: &models.Tag{
 			Name:      name,
 			State:     state,
@@ -92,6 +94,7 @@ func AddTag(c *gin.Context) {
 
 }
 
+//编辑标签
 func EditTag(c *gin.Context) {
 	appG := app.Gin{C: c}
 	id := com.StrTo(c.Param("id")).MustInt()
@@ -116,7 +119,7 @@ func EditTag(c *gin.Context) {
 		return
 	}
 
-	tagService := tag_service.Tag{
+	tagService := service.Tag{
 		ID:  id,
 		Tag: &models.Tag{},
 	}
@@ -144,7 +147,7 @@ func EditTag(c *gin.Context) {
 
 }
 
-//删除文章标签
+//删除标签
 func DeleteTag(c *gin.Context) {
 	appG := app.Gin{C: c}
 	id := com.StrTo(c.Param("id")).MustInt()
@@ -158,7 +161,7 @@ func DeleteTag(c *gin.Context) {
 		return
 	}
 
-	tagService := tag_service.Tag{
+	tagService := service.Tag{
 		ID: id,
 	}
 	exists, _ := tagService.ExistByID()
@@ -172,4 +175,33 @@ func DeleteTag(c *gin.Context) {
 		return
 	}
 	appG.Response(http.StatusOK, e.SUCCESS, nil)
+}
+
+//导出标签
+func ExportTag(c *gin.Context) {
+	appG := app.Gin{C: c}
+
+	tagService := service.Tag{
+		PageSize: setting.AppSetting.PageSize,
+		PageNum:  utils.GetPage(c),
+		Maps:     map[string]interface{}{},
+	}
+	if name := c.PostForm("name"); name != "" {
+		tagService.Maps["name"] = name
+	}
+	if state := c.PostForm("state"); state != "" {
+		tagService.Maps["state"] = com.StrTo(state).MustInt()
+	}
+
+	fileName, err := tagService.Export()
+	if err != nil {
+		appG.Response(http.StatusOK, e.ERROR_EXPORT_TAG_FAILE, nil)
+		return
+	}
+
+	appG.Response(http.StatusOK, e.SUCCESS, map[string]string{
+		"export_url":       export.GetExcelFullUrl(fileName),
+		"export_save_path": export.GetExcelPath() + fileName,
+	})
+
 }

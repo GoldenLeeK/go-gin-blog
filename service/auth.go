@@ -1,4 +1,4 @@
-package auth_service
+package service
 
 import "github.com/GoldenLeeK/go-gin-blog/models"
 

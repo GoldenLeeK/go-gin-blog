@@ -1,4 +1,4 @@
-package article_service
+package service
 
 import (
 	"encoding/json"

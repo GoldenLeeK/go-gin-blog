@@ -3,8 +3,9 @@ package v1
 import (
 	"github.com/GoldenLeeK/go-gin-blog/pkg/app"
 	"github.com/GoldenLeeK/go-gin-blog/pkg/logging"
-	"github.com/GoldenLeeK/go-gin-blog/service/article_service"
-	"github.com/GoldenLeeK/go-gin-blog/service/tag_service"
+	"github.com/GoldenLeeK/go-gin-blog/pkg/qrcode"
+	"github.com/GoldenLeeK/go-gin-blog/service"
+	"github.com/boombuler/barcode/qr"
 	"net/http"
 
 	"github.com/GoldenLeeK/go-gin-blog/models"
@@ -14,6 +15,10 @@ import (
 	"github.com/astaxie/beego/validation"
 	"github.com/gin-gonic/gin"
 	"github.com/unknwon/com"
+)
+
+const (
+	QRCODE_URL = "https://github.com/GoldenLeeK/blog#gin%E7%B3%BB%E5%88%97%E7%9B%AE%E5%BD%95"
 )
 
 func GetArticle(c *gin.Context) {
@@ -29,7 +34,7 @@ func GetArticle(c *gin.Context) {
 		return
 	}
 
-	articleService := article_service.Article{ID: id}
+	articleService := service.Article{ID: id}
 	exists, err := articleService.ExistByID()
 	if err != nil {
 		appG.Response(http.StatusOK, e.ERROR_CHECK_EXIST_ARTICLE_FAIL, nil)
@@ -75,7 +80,7 @@ func GetArticles(c *gin.Context) {
 		appG.Response(http.StatusOK, e.INVALID_PARAMS, nil)
 		return
 	}
-	articleService := article_service.Article{
+	articleService := service.Article{
 		PageNum:  utils.GetPage(c),
 		PageSize: setting.AppSetting.PageSize,
 		Maps:     maps,
@@ -116,7 +121,7 @@ func AddArticle(c *gin.Context) {
 		return
 	}
 
-	tagService := tag_service.Tag{ID: tagId}
+	tagService := service.Tag{ID: tagId}
 	tagExists, _ := tagService.ExistByID()
 
 	if !tagExists {
@@ -124,7 +129,7 @@ func AddArticle(c *gin.Context) {
 		return
 	}
 
-	articleService := article_service.Article{
+	articleService := service.Article{
 		Article: &models.Article{
 			TagID:         tagId,
 			Title:         title,
@@ -178,7 +183,7 @@ func EditArticle(c *gin.Context) {
 		return
 	}
 
-	articleService := article_service.Article{
+	articleService := service.Article{
 		ID: id,
 	}
 
@@ -193,7 +198,7 @@ func EditArticle(c *gin.Context) {
 		return
 	}
 
-	tagService := tag_service.Tag{ID: tagId}
+	tagService := service.Tag{ID: tagId}
 	tagExists, _ := tagService.ExistByID()
 
 	if !tagExists {
@@ -241,7 +246,7 @@ func DeleteArticle(c *gin.Context) {
 		return
 	}
 
-	articleService := article_service.Article{
+	articleService := service.Article{
 		ID: id,
 	}
 	exists, _ := articleService.ExistByID()
@@ -257,4 +262,31 @@ func DeleteArticle(c *gin.Context) {
 	}
 
 	appG.Response(http.StatusOK, e.SUCCESS, nil)
+}
+
+func GenerateArticlePoster(c *gin.Context) {
+	appG := app.Gin{C: c}
+	article := &service.Article{}
+	qrc := qrcode.NewQrCode(QRCODE_URL, 300, 300, qr.M, qr.Auto)
+	posterName := service.GetPosterFlag() + "_" + qrcode.GetQrCodeFileName(qrc.URL) + qrc.GetQrCodeExt()
+	articlePoster := service.NewArticlePoster(posterName, article, qrc)
+	articlePosterBgService := service.NewArticlePosterBg("bg.jpg", articlePoster, &service.Rect{
+		X0: 0,
+		Y0: 0,
+		X1: 550,
+		Y1: 700,
+	}, &service.Pt{
+		X: 125,
+		Y: 298,
+	})
+	_, filePath, err := articlePosterBgService.Generate()
+	if err != nil {
+		appG.Response(http.StatusOK, e.ERROR_GEN_ARTICLE_POSTER_FAIL, nil)
+		return
+	}
+
+	appG.Response(http.StatusOK, e.SUCCESS, map[string]string{
+		"poster_url":      qrcode.GetQrCodeFullUrl(posterName),
+		"poster_save_url": filePath + posterName,
+	})
 }

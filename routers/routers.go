@@ -2,6 +2,8 @@ package routers
 
 import (
 	"github.com/GoldenLeeK/go-gin-blog/middleware/jwt"
+	"github.com/GoldenLeeK/go-gin-blog/pkg/export"
+	"github.com/GoldenLeeK/go-gin-blog/pkg/qrcode"
 	"github.com/GoldenLeeK/go-gin-blog/pkg/setting"
 	"github.com/GoldenLeeK/go-gin-blog/pkg/upload"
 	"github.com/GoldenLeeK/go-gin-blog/routers/api"
@@ -19,6 +21,8 @@ func InitRouter() *gin.Engine {
 
 	gin.SetMode(setting.ServerSetting.RunMode)
 	r.StaticFS("/upload/images", http.Dir(upload.GetImageFullPath()))
+	r.StaticFS("/export", http.Dir(export.GetExcelFullPath()))
+	r.StaticFS("/qrcode", http.Dir(qrcode.GetQrCodeFullPath()))
 
 	//获取授权token
 	r.POST("/auth", v1.GetAuth)
@@ -36,6 +40,8 @@ func InitRouter() *gin.Engine {
 		apiv1.PUT("/tags/:id", v1.EditTag)
 		//删除指定标签
 		apiv1.DELETE("/tags/:id", v1.DeleteTag)
+		//导出标签
+		apiv1.POST("tags/export", v1.ExportTag)
 
 		//获取帖子列表
 		apiv1.GET("/articles", v1.GetArticles)
@@ -47,6 +53,8 @@ func InitRouter() *gin.Engine {
 		apiv1.PUT("/articles/:id", v1.EditArticle)
 		//删除指定帖子
 		apiv1.DELETE("/articles/:id", v1.DeleteArticle)
+		//生成海报
+		apiv1.POST("/articles/poster/generate", v1.GenerateArticlePoster)
 
 	}
 	return r

@@ -2,7 +2,7 @@ package v1
 
 import (
 	"github.com/GoldenLeeK/go-gin-blog/pkg/app"
-	"github.com/GoldenLeeK/go-gin-blog/service/auth_service"
+	"github.com/GoldenLeeK/go-gin-blog/service"
 	"net/http"
 
 	"github.com/GoldenLeeK/go-gin-blog/pkg/e"
@@ -31,7 +31,7 @@ func GetAuth(c *gin.Context) {
 		return
 	}
 
-	authService := auth_service.Auth{
+	authService := service.Auth{
 		Username: username,
 		Password: password,
 	}
